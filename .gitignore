@@ -3,3 +3,4 @@ config/config-kh.json
 config/config.live.json
 kevinhookebot.zip
 deploys/
+node_modules/

@@ -1,4 +1,4 @@
-var AWS = require("aws-sdk");
+let AWS = require("aws-sdk");
 
 exports.readNext = function() {
     AWS.config.update({
@@ -11,18 +11,34 @@ exports.readNext = function() {
 
     console.log("reading next tweet from DynamoDB table");
 
-    //scan query
-    var params = {
-        TableName: "tweetbottweets",
-        ProjectionExpression: "createdate, #tweetdate, tweettext",
-        FilterExpression: "#tweetdate = :tweetdate",
-        ExpressionAttributeNames: {
-            "#tweetdate": "tweetdate"
-        },
-        ExpressionAttributeValues: {
-            ":tweetdate": "0"
-        }
-    }
+    //previous approach with scan
+    // var params = {
+    //     TableName: "tweetbottweets",
+    //     ProjectionExpression: "createdate, #tweetdate, tweettext",
+    //     FilterExpression: "#tweetdate = :tweetdate",
+    //     ExpressionAttributeNames: {
+    //         "#tweetdate": "tweetdate"
+    //     },
+    //     ExpressionAttributeValues: {
+    //         ":tweetdate": "0"
+    //     }
+    // }
+    //
+    // return docClient.scan(params).promise();
 
-    return docClient.scan(params).promise();
+    //improved approach querying a global secondary index, also using Limit to restrict
+    //number of rows scanned and therefore returned return the first row found)
+    let params = 
+    {
+        "TableName": "tweetbottweets",
+        "IndexName": "tweetdate-createdate-index",
+        "KeyConditionExpression": "tweetdate = :tweetdate",
+        "ExpressionAttributeValues": {
+            ":tweetdate": "0"
+        },
+        "ProjectionExpression": "createdate, tweetdate, tweettext",
+        "ScanIndexForward": false,
+        "Limit": 1
+    }
+    return docClient.query(params).promise();
 }

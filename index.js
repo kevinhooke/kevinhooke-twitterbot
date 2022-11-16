@@ -20,7 +20,7 @@ var config = require("./config/config.json");
  * 
  * @kevinhooke March 2018 
  */
-exports.sendtweet = function() {
+exports.sendtweet = async function() {
 
     //check for required values
     var configComplete = true;
@@ -66,46 +66,41 @@ exports.sendtweet = function() {
         'HMAC-SHA1'
     );
 
-    read.readNext()
-        .then(function (data) {
+    let data = await read.readNext();
+    console.log("data: " + JSON.stringify(data));
 
-                console.log("data: " + JSON.stringify(data));
+    //todo: get first item only
+    //data.Items.forEach(function (item) {
+    if (data.Items != null && data.Items.length > 0) {
+        var item = data.Items[0];
 
-                //todo: get first item only
-                //data.Items.forEach(function (item) {
-                if (data.Items != null && data.Items.length > 0) {
-                    var item = data.Items[0];
+        console.log(item.createdate + " / " + item.tweetdate + " / " + item.tweettext);
 
-                    console.log(item.createdate + " / " + item.tweetdate + " / " + item.tweettext);
-
-                    var status = ({
-                        'status': item.tweettext
-                    });
-
-                    console.log(new Date() + status);
-
-                    if (config.sendTweetEnabled == "true") {
-
-                        oauth.post('https://api.twitter.com/1.1/statuses/update.json',
-                            config.accessToken,
-                            config.accessTokenSecret,
-                            status,
-                            function (error, data) {
-                                console.log('\nPOST status:\n');
-                                console.log(error || data);
-                            });
-                    }
-                    else {
-                        console.log("config.sendTweetEnabled: false, status: " + JSON.stringify(status));
-                    }
-
-                    update.updateSourceTweet(item.createdate);
-                    //});
-                }
-            }
-        )
-        .catch(function (err) {
-            console.log("unexpected error from promise: " + err);
+        var status = ({
+            'status': item.tweettext
         });
+
+        console.log(new Date() + status);
+
+        if (config.sendTweetEnabled == "true") {
+
+            oauth.post('https://api.twitter.com/1.1/statuses/update.json',
+                config.accessToken,
+                config.accessTokenSecret,
+                status,
+                function (error, data) {
+                    console.log('\nPOST status:\n');
+                    console.log(error || data);
+                });
+        }
+        else {
+            console.log("config.sendTweetEnabled: false, status: " + JSON.stringify(status));
+        }
+
+        update.updateSourceTweet(item.createdate);
+    }
+    else{
+        console.log("No matching source text rows from table");
+    }
 }
 
