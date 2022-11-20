@@ -1,6 +1,6 @@
 var AWS = require("aws-sdk");
 
-exports.updateSourceTweet = function(createdate) {
+exports.updateSourceTweet = async (createdate) => {
 
     console.log("updateSourceTweet called...");
 
@@ -27,5 +27,11 @@ exports.updateSourceTweet = function(createdate) {
     };
 
     console.log("Updating the item...");
-    return docClient.update(params).promise();
+    try{
+        let result = await docClient.update(params).promise();
+        console.log(`... complete: ${JSON.stringify(result)}`)
+    }
+    catch(e){
+        console.error(`... unexpected error updating: ${JSON.stringify(e)}`);
+    }
 }

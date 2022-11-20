@@ -25,7 +25,7 @@ exports.handler = async (event) => {
 
         //update source table marking this item as sent
         console.log("About to call updateSourceTweet() ...");      
-        let result = await updateMessage.updateSourceTweet(item.createdate);
+        await updateMessage.updateSourceTweet(item.createdate);
         console.log("... updateSourceTweet() done")
     }
     else{
