@@ -1,3 +1,4 @@
-var send = require('../index.js');
+var sendMessages = require('../lambda-sendtweet.js');
 
-send.sendtweet();
+let event = {};
+sendMessages.handler(event);

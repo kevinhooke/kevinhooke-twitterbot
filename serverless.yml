@@ -6,12 +6,44 @@ provider:
   name: aws
   runtime: nodejs14.x
   lambdaHashingVersion: 20201221
+  timeout: 10
   iam:
-    role: ${env:ROLE}
-
+    role: kevinhookeTwitterbotRole
 functions:
   sendTweet:
     handler: lambda-sendtweet.handler
     events:
       # Invoke Lambda function every 2 hours
       - schedule: rate(2 hours)
+resources:
+  Resources:
+   kevinhookeTwitterbotRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::${aws:accountId}:policy/lambda-execution-log-access
+      Path: /
+      Policies:
+        - PolicyName: iam-policy-kevinhookeTwitterbot
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "dynamodb:Scan"
+                  - "dynamodb:Query"
+                  - "dynamodb:UpdateItem"
+                Resource:
+                  - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/tweetbottweets"
+                  - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/tweetbottweets/index/Index"
+                  - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/tweetbottweets/index/tweetdate-createdate-index"
+                  - "arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/tweetbotreplies"

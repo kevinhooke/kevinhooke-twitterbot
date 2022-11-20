@@ -1,7 +1,4 @@
 var OAuth = require("oauth");
-var TweetCache = require('./tweet-cache.js');
-var read = require('./readsourcedata-promise.js');
-var update = require('./update.js');
 
 //load config from file
 var config = require("./config/config.json");
@@ -20,10 +17,10 @@ var config = require("./config/config.json");
  * 
  * @kevinhooke March 2018 
  */
-exports.sendtweet = async function() {
+exports.sendtweet = async (item) => {
 
     //check for required values
-    var configComplete = true;
+    let configComplete = true;
     if (config.sendTweetEnabled == undefined || config.sendTweetEnabled == "") {
         console.log("config.json: sendTweetEnabled value is missing - set to true | false");
         configComplete = false;
@@ -56,7 +53,7 @@ exports.sendtweet = async function() {
         //console.log("... config.accessTokenSecret: " + config.accessTokenSecret);
     }
 
-    var oauth = new OAuth.OAuth(
+    let oauth = new OAuth.OAuth(
         'https://api.twitter.com/oauth/request_token',
         'https://api.twitter.com/oauth/access_token',
         config.twitterConsumerKey,
@@ -66,41 +63,28 @@ exports.sendtweet = async function() {
         'HMAC-SHA1'
     );
 
-    let data = await read.readNext();
-    console.log("data: " + JSON.stringify(data));
 
-    //todo: get first item only
-    //data.Items.forEach(function (item) {
-    if (data.Items != null && data.Items.length > 0) {
-        var item = data.Items[0];
+    console.log(item.createdate + " / " + item.tweetdate + " / " + item.tweettext);
 
-        console.log(item.createdate + " / " + item.tweetdate + " / " + item.tweettext);
+    let status = ({
+        'status': item.tweettext
+    });
 
-        var status = ({
-            'status': item.tweettext
-        });
+    console.log(new Date() + status);
 
-        console.log(new Date() + status);
+    if (config.sendTweetEnabled == "true") {
 
-        if (config.sendTweetEnabled == "true") {
-
-            oauth.post('https://api.twitter.com/1.1/statuses/update.json',
-                config.accessToken,
-                config.accessTokenSecret,
-                status,
-                function (error, data) {
-                    console.log('\nPOST status:\n');
-                    console.log(error || data);
-                });
-        }
-        else {
-            console.log("config.sendTweetEnabled: false, status: " + JSON.stringify(status));
-        }
-
-        update.updateSourceTweet(item.createdate);
+        oauth.post('https://api.twitter.com/1.1/statuses/update.json',
+            config.accessToken,
+            config.accessTokenSecret,
+            status,
+            function (error, data) {
+                console.log('\nPOST status:\n');
+                console.log(error || data);
+            });
     }
-    else{
-        console.log("No matching source text rows from table");
+    else {
+        console.log("config.sendTweetEnabled: false, status: " + JSON.stringify(status));
     }
 }
 
